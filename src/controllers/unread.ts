@@ -1,5 +1,6 @@
 import nconf from 'nconf';
 import querystring from 'querystring';
+import { Request, Response } from 'express';
 
 import meta from '../meta';
 import pagination from '../pagination';
@@ -7,10 +8,9 @@ import user from '../user';
 import topics from '../topics';
 import helpers from './helpers';
 
-const unreadController = module.exports;
-const relative_path = nconf.get("relative_path");
+const relative_path: string = (nconf.get('relative_path') as string);
 
-unreadController.get = async function (req, res) {
+export async function get(req: Request, res: Response) {
   const { cid } = req.query;
   const filter = req.query.filter || "";
 
@@ -80,7 +80,7 @@ unreadController.get = async function (req, res) {
   res.render("unread", data);
 };
 
-unreadController.unreadTotal = async function (req, res, next) {
+export async function unreadTotal(req, res, next) {
   const filter = req.query.filter || "";
   try {
     const unreadCount = await topics.getTotalUnread(req.uid, filter);
