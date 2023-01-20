@@ -8,7 +8,7 @@ import user from '../user';
 import topics from '../topics';
 import helpers from './helpers';
 
-import { SettingsObject, Breadcrumbs, PaginationObject } from '../types';
+import { SettingsObject, Breadcrumbs, Pagination } from '../types';
 
 const relative_path: string = (nconf.get('relative_path') as string);
 
@@ -31,7 +31,7 @@ type UnreadData = {
     breadcrumbs: Breadcrumbs,
     pageCount: number,
     topicCount: number,
-    pagination: PaginationObject,
+    pagination: Pagination,
     showSelect: boolean,
     showTopicTools: boolean,
     allCategoriesUrl: string,
@@ -49,7 +49,15 @@ type CategoryData = {
     selectedCategory: SelectedCategoryData
 }
 
-export async function get(req: Request & { uid: number }, res: Response): Promise<void> {
+type QueryRes = {
+    uid: number,
+    cid: number,
+    filter: string,
+    page: string | number
+}
+
+export async function get(req: Request<object, object, object, QueryRes> & { uid: number },
+    res: Response): Promise<void> {
     const { cid } = req.query;
     const filter = req.query.filter || '';
 
@@ -125,7 +133,7 @@ export async function get(req: Request & { uid: number }, res: Response): Promis
     );
 
     res.render('unread', data);
-};
+}
 
 export async function unreadTotal(req: Request & { uid: number }, res: Response, next: NextFunction) {
     const filter = req.query.filter || '';

@@ -20,19 +20,22 @@ const pagination_1 = __importDefault(require("../pagination"));
 const user_1 = __importDefault(require("../user"));
 const topics_1 = __importDefault(require("../topics"));
 const helpers_1 = __importDefault(require("./helpers"));
-const relative_path = nconf_1.default.get("relative_path");
+const relative_path = nconf_1.default.get('relative_path');
 function get(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const { cid } = req.query;
-        const filter = req.query.filter || "";
+        const filter = req.query.filter || '';
         const [categoryData, userSettings, isPrivileged] = yield Promise.all([
             helpers_1.default.getSelectedCategory(cid),
+            // The next line calls a function in a module that has not been updated to TS yet
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
             user_1.default.getSettings(req.uid),
             user_1.default.isPrivileged(req.uid),
         ]);
         const page = parseInt(req.query.page, 10) || 1;
         const start = Math.max(0, (page - 1) * userSettings.topicsPerPage);
         const stop = start + userSettings.topicsPerPage - 1;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         const data = yield topics_1.default.getUnreadTopics({
             cid: cid,
             uid: req.uid,
@@ -43,18 +46,20 @@ function get(req, res) {
         });
         const isDisplayedAsHome = !(req.originalUrl.startsWith(`${relative_path}/api/unread`) ||
             req.originalUrl.startsWith(`${relative_path}/unread`));
-        const baseUrl = isDisplayedAsHome ? "" : "unread";
+        const baseUrl = isDisplayedAsHome ? '' : 'unread';
         if (isDisplayedAsHome) {
-            data.title = meta_1.default.config.homePageTitle || "[[pages:home]]";
+            // The next line calls a function in a module that has not been updated to TS yet
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+            data.title = meta_1.default.config.homePageTitle || '[[pages:home]]';
         }
         else {
-            data.title = "[[pages:unread]]";
-            data.breadcrumbs = helpers_1.default.buildBreadcrumbs([{ text: "[[unread:title]]" }]);
+            data.title = '[[pages:unread]]';
+            data.breadcrumbs = helpers_1.default.buildBreadcrumbs([{ text: '[[unread:title]]' }]);
         }
         data.pageCount = Math.max(1, Math.ceil(data.topicCount / userSettings.topicsPerPage));
         data.pagination = pagination_1.default.create(page, data.pageCount, req.query);
         helpers_1.default.addLinkTags({
-            url: "unread",
+            url: 'unread',
             res: req.res,
             tags: data.pagination.rel,
         });
@@ -64,23 +69,24 @@ function get(req, res) {
         }
         data.showSelect = true;
         data.showTopicTools = isPrivileged;
-        data.allCategoriesUrl = `${baseUrl}${helpers_1.default.buildQueryString(req.query, "cid", "")}`;
+        data.allCategoriesUrl = `${baseUrl}${helpers_1.default.buildQueryString(req.query, 'cid', '')}`;
         data.selectedCategory = categoryData.selectedCategory;
         data.selectedCids = categoryData.selectedCids;
-        data.selectCategoryLabel = "[[unread:mark_as_read]]";
-        data.selectCategoryIcon = "fa-inbox";
+        data.selectCategoryLabel = '[[unread:mark_as_read]]';
+        data.selectCategoryIcon = 'fa-inbox';
         data.showCategorySelectLabel = true;
         data.filters = helpers_1.default.buildFilters(baseUrl, filter, req.query);
-        data.selectedFilter = data.filters.find((filter) => filter && filter.selected);
-        res.render("unread", data);
+        data.selectedFilter = data.filters.find(filter => filter && filter.selected);
+        res.render('unread', data);
     });
 }
 exports.get = get;
-;
 function unreadTotal(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
-        const filter = req.query.filter || "";
+        const filter = req.query.filter || '';
         try {
+            // The next line calls a function in a module that has not been updated to TS yet
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
             const unreadCount = yield topics_1.default.getTotalUnread(req.uid, filter);
             res.json(unreadCount);
         }
@@ -90,4 +96,3 @@ function unreadTotal(req, res, next) {
     });
 }
 exports.unreadTotal = unreadTotal;
-;
