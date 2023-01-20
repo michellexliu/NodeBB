@@ -8,21 +8,31 @@ import user from '../user';
 import topics from '../topics';
 import helpers from './helpers';
 
+import { SettingsObject, CategoryObject } from '../types';
+
 const relative_path: string = (nconf.get('relative_path') as string);
 
-export async function get(req: Request, res: Response) {
+export async function get(req: Request & { uid: number }, res: Response): Promise<void> {
     const { cid } = req.query;
-    const filter = req.query.filter || "";
+    const filter = req.query.filter || '';
 
-    const [categoryData, userSettings, isPrivileged] = await Promise.all([
-        helpers.getSelectedCategory(cid),
-        user.getSettings(req.uid),
-        user.isPrivileged(req.uid),
-    ]);
+    const [categoryData, userSettings, isPrivileged]:
+        [CategoryObject, SettingsObject, boolean] =
+        await Promise.all([
+            helpers.getSelectedCategory(cid) as CategoryObject,
 
-    const page = parseInt(req.query.page, 10) || 1;
-    const start = Math.max(0, (page - 1) * userSettings.topicsPerPage);
-    const stop = start + userSettings.topicsPerPage - 1;
+            // The next line calls a function in a module that has not been updated to TS yet
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+            user.getSettings(req.uid) as SettingsObject,
+            user.isPrivileged(req.uid) as boolean,
+        ]);
+
+    const page: number = parseInt(req.query.page as string, 10) || 1;
+    const start: number = Math.max(0, (page - 1) * userSettings.topicsPerPage);
+    const stop: number = start + userSettings.topicsPerPage - 1;
+
+    // The next line calls a function in a module that has not been updated to TS yet
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
     const data = await topics.getUnreadTopics({
         cid: cid,
         uid: req.uid,
@@ -36,13 +46,13 @@ export async function get(req: Request, res: Response) {
         req.originalUrl.startsWith(`${relative_path}/api/unread`) ||
         req.originalUrl.startsWith(`${relative_path}/unread`)
     );
-    const baseUrl = isDisplayedAsHome ? "" : "unread";
+    const baseUrl = isDisplayedAsHome ? '' : 'unread';
 
     if (isDisplayedAsHome) {
-        data.title = meta.config.homePageTitle || "[[pages:home]]";
+        data.title = meta.config.homePageTitle || '[[pages:home]]';
     } else {
-        data.title = "[[pages:unread]]";
-        data.breadcrumbs = helpers.buildBreadcrumbs([{ text: "[[unread:title]]" }]);
+        data.title = '[[pages:unread]]';
+        data.breadcrumbs = helpers.buildBreadcrumbs([{ text: '[[unread:title]]' }]);
     }
 
     data.pageCount = Math.max(
@@ -51,7 +61,7 @@ export async function get(req: Request, res: Response) {
     );
     data.pagination = pagination.create(page, data.pageCount, req.query);
     helpers.addLinkTags({
-        url: "unread",
+        url: 'unread',
         res: req.res,
         tags: data.pagination.rel,
     });
@@ -64,24 +74,24 @@ export async function get(req: Request, res: Response) {
     data.showTopicTools = isPrivileged;
     data.allCategoriesUrl = `${baseUrl}${helpers.buildQueryString(
         req.query,
-        "cid",
-        ""
+        'cid',
+        ''
     )}`;
     data.selectedCategory = categoryData.selectedCategory;
     data.selectedCids = categoryData.selectedCids;
-    data.selectCategoryLabel = "[[unread:mark_as_read]]";
-    data.selectCategoryIcon = "fa-inbox";
+    data.selectCategoryLabel = '[[unread:mark_as_read]]';
+    data.selectCategoryIcon = 'fa-inbox';
     data.showCategorySelectLabel = true;
     data.filters = helpers.buildFilters(baseUrl, filter, req.query);
     data.selectedFilter = data.filters.find(
         (filter) => filter && filter.selected
     );
 
-    res.render("unread", data);
+    res.render('unread', data);
 };
 
 export async function unreadTotal(req, res, next) {
-    const filter = req.query.filter || "";
+    const filter = req.query.filter || '';
     try {
         const unreadCount = await topics.getTotalUnread(req.uid, filter);
         res.json(unreadCount);
