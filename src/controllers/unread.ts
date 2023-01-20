@@ -8,18 +8,53 @@ import user from '../user';
 import topics from '../topics';
 import helpers from './helpers';
 
-import { SettingsObject, CategoryObject } from '../types';
+import { SettingsObject, Breadcrumbs, PaginationObject } from '../types';
 
 const relative_path: string = (nconf.get('relative_path') as string);
+
+type SelectedCategoryData = {
+    icon: string,
+    name: string,
+    bgColor: string
+}
+
+type Filter = {
+    name: string,
+    url: string,
+    selected: boolean,
+    filter: string,
+    icon: string,
+}
+
+type UnreadData = {
+    title: string,
+    breadcrumbs: Breadcrumbs,
+    pageCount: number,
+    pagination: PaginationObject,
+    showSelect: boolean,
+    showTopicTools: boolean,
+    allCategoriesUrl: string,
+    selectedCategory: SelectedCategoryData,
+    selectedCids: number[],
+    selectCategoryLabel: string,
+    selectCategoryIcon: string,
+    showCategorySelectLabel: boolean,
+    filters: Filter[],
+    selectedFilter: Filter,
+}
+
+type CategoryData = {
+    selectedCids: number[],
+    selectedCategory: SelectedCategoryData
+}
 
 export async function get(req: Request & { uid: number }, res: Response): Promise<void> {
     const { cid } = req.query;
     const filter = req.query.filter || '';
 
-    const [categoryData, userSettings, isPrivileged]:
-        [CategoryObject, SettingsObject, boolean] =
+    const [categoryData, userSettings, isPrivileged]: [CategoryData, SettingsObject, boolean] =
         await Promise.all([
-            helpers.getSelectedCategory(cid) as CategoryObject,
+            helpers.getSelectedCategory(cid),
 
             // The next line calls a function in a module that has not been updated to TS yet
             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
@@ -31,9 +66,8 @@ export async function get(req: Request & { uid: number }, res: Response): Promis
     const start: number = Math.max(0, (page - 1) * userSettings.topicsPerPage);
     const stop: number = start + userSettings.topicsPerPage - 1;
 
-    // The next line calls a function in a module that has not been updated to TS yet
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-    const data = await topics.getUnreadTopics({
+    const data: UnreadData = await topics.getUnreadTopics({
         cid: cid,
         uid: req.uid,
         start: start,
