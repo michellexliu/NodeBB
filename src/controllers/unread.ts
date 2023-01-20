@@ -1,6 +1,6 @@
 import nconf from 'nconf';
 import querystring from 'querystring';
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 
 import meta from '../meta';
 import pagination from '../pagination';
@@ -30,6 +30,7 @@ type UnreadData = {
     title: string,
     breadcrumbs: Breadcrumbs,
     pageCount: number,
+    topicCount: number,
     pagination: PaginationObject,
     showSelect: boolean,
     showTopicTools: boolean,
@@ -74,7 +75,7 @@ export async function get(req: Request & { uid: number }, res: Response): Promis
         stop: stop,
         filter: filter,
         query: req.query,
-    });
+    }) as UnreadData;
 
     const isDisplayedAsHome = !(
         req.originalUrl.startsWith(`${relative_path}/api/unread`) ||
@@ -83,7 +84,9 @@ export async function get(req: Request & { uid: number }, res: Response): Promis
     const baseUrl = isDisplayedAsHome ? '' : 'unread';
 
     if (isDisplayedAsHome) {
-        data.title = meta.config.homePageTitle || '[[pages:home]]';
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+        data.title = meta.config.homePageTitle as string || '[[pages:home]]';
     } else {
         data.title = '[[pages:unread]]';
         data.breadcrumbs = helpers.buildBreadcrumbs([{ text: '[[unread:title]]' }]);
@@ -118,18 +121,20 @@ export async function get(req: Request & { uid: number }, res: Response): Promis
     data.showCategorySelectLabel = true;
     data.filters = helpers.buildFilters(baseUrl, filter, req.query);
     data.selectedFilter = data.filters.find(
-        (filter) => filter && filter.selected
+        filter => filter && filter.selected
     );
 
     res.render('unread', data);
 };
 
-export async function unreadTotal(req, res, next) {
+export async function unreadTotal(req: Request & { uid: number }, res: Response, next: NextFunction) {
     const filter = req.query.filter || '';
     try {
-        const unreadCount = await topics.getTotalUnread(req.uid, filter);
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+        const unreadCount = await topics.getTotalUnread(req.uid, filter) as number;
         res.json(unreadCount);
     } catch (err) {
         next(err);
     }
-};
+}
