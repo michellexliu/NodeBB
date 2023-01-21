@@ -75,6 +75,7 @@ export async function get(req: Request<object, object, object, QueryRes> & { uid
     const start: number = Math.max(0, (page - 1) * userSettings.topicsPerPage);
     const stop: number = start + userSettings.topicsPerPage - 1;
 
+    // The next line calls a function in a module that has not been updated to TS yet
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
     const data: UnreadData = await topics.getUnreadTopics({
         cid: cid,

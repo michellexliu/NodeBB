@@ -35,6 +35,7 @@ function get(req, res) {
         const page = parseInt(req.query.page, 10) || 1;
         const start = Math.max(0, (page - 1) * userSettings.topicsPerPage);
         const stop = start + userSettings.topicsPerPage - 1;
+        // The next line calls a function in a module that has not been updated to TS yet
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         const data = yield topics_1.default.getUnreadTopics({
             cid: cid,
